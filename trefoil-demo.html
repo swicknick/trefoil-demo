@@ -46,6 +46,20 @@
   nav button:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); }
   nav button.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
 
+  .nav-heading {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.3);
+    padding: 14px 10px 6px;
+    margin: 0 -10px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .nav-heading:first-child { padding-top: 0; }
+
   main {
     flex: 1;
     display: flex;
@@ -356,31 +370,24 @@
   // glow / glowA / glowF – blur glow + oscillation
   // skewX – horizontal skew (°)
   // fillOp – interior fill opacity (0–0.3)
+  // Streaming: agent response. Header: app header / lifecycle.
   const emotions = [
-    { name: 'Calm',          color:  0, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0,    wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0    },
-    { name: 'Curious',       color:  9, rot: 14,  sc: 1,    tx: 1,  ty: -1, ts: 0.04, te: 0.80, oSpd: 0.06, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0.5, glowA: 0,    glowF: 0,   skewX:  3, fillOp: 0    },
-    { name: 'Joy',           color:  6, rot:  0,  sc: 1.04, tx: 0,  ty: -2, ts: 0,    te: 1,    oSpd: 0.08, wA: 0,   wF: 0,    soA: 0.03,  soF: 2.5, sw: 2.2, knotA: 2,   knotB: 2,   glow: 1.5, glowA: 0.8,  glowF: 2.5, skewX:  0, fillOp: 0.05 },
-    { name: 'Worry',         color:  2, rot: -4,  sc: 0.92, tx: 0,  ty:  1, ts: 0.12, te: 0.60, oSpd: 0.04, wA: 1.8, wF: 8,    soA: 0,     soF: 0,   sw: 1.8, knotA: 2.1, knotB: 1.9, glow: 0,   glowA: 0,    glowF: 0,   skewX: -2, fillOp: 0    },
-    { name: 'Focus',         color:  8, rot:  0,  sc: 1.06, tx: 0,  ty:  0, ts: 0.02, te: 0.72, oSpd: 0.02, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 1,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.02 },
-    { name: 'Surprise',      color: 11, rot:  0,  sc: 1.10, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.15, wA: 0,   wF: 0,    soA: 0.05,  soF: 4,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 2,   glowA: 1.5,  glowF: 4,   skewX:  0, fillOp: 0.06 },
-    { name: 'Melancholy',    color:  2, rot: -6,  sc: 0.88, tx: 0,  ty:  3, ts: 0.18, te: 0.55, oSpd: 0.03, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 1.6, knotA: 1.8, knotB: 2.2, glow: 0.5, glowA: 0,    glowF: 0,   skewX: -4, fillOp: 0    },
-    { name: 'Excitement',    color: 13, rot:  0,  sc: 1.02, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.30, wA: 3.5, wF: 5,    soA: 0.02,  soF: 3,   sw: 2.2, knotA: 2,   knotB: 2,   glow: 2.5, glowA: 1,    glowF: 3,   skewX:  0, fillOp: 0.07 },
-    { name: 'Serenity',      color:  4, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 0.92, oSpd: 0.04, wA: 3,   wF: 0.3,  soA: 0.015, soF: 1.2, sw: 2,   knotA: 2,   knotB: 2,   glow: 1,   glowA: 0.3,  glowF: 0.5, skewX:  0, fillOp: 0.03 },
-    { name: 'Tension',       color: 14, rot:  2,  sc: 0.96, tx: 0,  ty:  0, ts: 0.22, te: 0.48, oSpd: 0.25, wA: 1.2, wF: 12,   soA: 0,     soF: 0,   sw: 2,   knotA: 2.3, knotB: 1.7, glow: 0,   glowA: 0,    glowF: 0,   skewX:  4, fillOp: 0    },
-    { name: 'Playful',       color: 10, rot: 10,  sc: 1,    tx: 1,  ty: -1, ts: 0.03, te: 0.85, oSpd: 0.12, wA: 2,   wF: 3,    soA: 0.04,  soF: 2,   sw: 2.1, knotA: 2,   knotB: 2,   glow: 1,   glowA: 0.5,  glowF: 2,   skewX:  5, fillOp: 0.04 },
-    { name: 'Contemplation', color:  8, rot:  8,  sc: 1,    tx: 0,  ty:  0, ts: 0.06, te: 0.82, oSpd: 0.02, wA: 0.5, wF: 0.4,  soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0.8, glowA: 0,    glowF: 0,   skewX:  3, fillOp: 0.02 },
-    { name: 'Rest',          color:  2, rot:  0,  sc: 0.90, tx: 0,  ty:  1, ts: 0.22, te: 0.52, oSpd: 0.01, wA: 0,   wF: 0,    soA: 0.01,  soF: 0.8, sw: 1.5, knotA: 1.9, knotB: 2.1, glow: 0.5, glowA: 0.2,  glowF: 0.6, skewX:  0, fillOp: 0.03 },
-    // ── New ──────────────────────────────────────────────────────────────────
-    { name: 'Euphoria',      color: 11, rot:  0,  sc: 1.08, tx: 0,  ty: -2, ts: 0,    te: 1,    oSpd: 0.22, wA: 0,   wF: 0,    soA: 0.04,  soF: 3,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.5,  glowF: 2,   skewX:  0, fillOp: 0.12 },
-    { name: 'Wonder',        color: 10, rot:  5,  sc: 1.02, tx: 0,  ty:  0, ts: 0,    te: 0.88, oSpd: 0.05, wA: 0.5, wF: 0.6,  soA: 0.02,  soF: 1,   sw: 2,   knotA: 1.5, knotB: 2.5, glow: 2,   glowA: 0.6,  glowF: 0.8, skewX:  5, fillOp: 0.06 },
-    { name: 'Dread',         color: 14, rot: -3,  sc: 0.87, tx: 0,  ty:  2, ts: 0.28, te: 0.55, oSpd: 0.18, wA: 0.8, wF: 14,   soA: 0,     soF: 0,   sw: 1.8, knotA: 2.6, knotB: 1.5, glow: 0,   glowA: 0,    glowF: 0,   skewX: -6, fillOp: 0    },
-    { name: 'Flow',          color:  9, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.09, wA: 2,   wF: 0.5,  soA: 0.02,  soF: 0.8, sw: 2,   knotA: 1.7, knotB: 1.7, glow: 1.5, glowA: 0.5,  glowF: 0.6, skewX:  0, fillOp: 0.05 },
-    { name: 'Dreaming',      color:  2, rot:  6,  sc: 0.95, tx: 0,  ty:  0, ts: 0,    te: 0.85, oSpd: 0.03, wA: 0.8, wF: 0.3,  soA: 0.02,  soF: 0.5, sw: 1.8, knotA: 2,   knotB: 2,   glow: 5,   glowA: 1.2,  glowF: 0.4, skewX:  8, fillOp: 0.09 },
-    { name: 'Agitated',      color: 14, rot:  0,  sc: 0.97, tx: 0,  ty:  0, ts: 0.08, te: 0.75, oSpd: 0.24, wA: 4,   wF: 10,   soA: 0.03,  soF: 6,   sw: 2,   knotA: 2.5, knotB: 2.5, glow: 0,   glowA: 0,    glowF: 0,   skewX: -3, fillOp: 0    },
-    { name: 'Tenderness',    color: 12, rot:  0,  sc: 0.98, tx: 0,  ty:  0, ts: 0,    te: 0.95, oSpd: 0.04, wA: 1,   wF: 0.4,  soA: 0.015, soF: 1,   sw: 2,   knotA: 1.8, knotB: 2,   glow: 2,   glowA: 0.5,  glowF: 0.8, skewX:  2, fillOp: 0.07 },
-    { name: 'Confidence',    color:  1, rot:  0,  sc: 1.06, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.05, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.8, knotA: 2,   knotB: 2,   glow: 1.5, glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.05 },
-    { name: 'Longing',       color: 10, rot: -8,  sc: 0.94, tx: 0,  ty:  2, ts: 0.08, te: 0.78, oSpd: 0.04, wA: 0.5, wF: 0.5,  soA: 0.01,  soF: 0.7, sw: 1.8, knotA: 2.2, knotB: 1.8, glow: 1.5, glowA: 0.3,  glowF: 0.5, skewX: -6, fillOp: 0.04 },
+    { id: 'working',     category: 'Streaming', name: 'Working',     color:  8, rot:  0,  sc: 1.06, tx: 0,  ty:  0,   ts: 0.02, te: 0.72, oSpd: 0.025, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 1.1, glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.02 },
+    { id: 'listening',   category: 'Streaming', name: 'Listening',   color:  4, rot:  0,  sc: 1.09, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.05,  wA: 0.4, wF: 0.8,  soA: 0.012, soF: 1,   sw: 2.3, knotA: 2,   knotB: 2,   glow: 1.4, glowA: 0.4,  glowF: 0.9, skewX:  0, fillOp: 0.04 },
+    { id: 'happy',       category: 'Streaming', name: 'Happy',       color: 11, rot:  0,  sc: 1.05, tx: 0,  ty: -1.5, ts: 0,    te: 1,    oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0.035, soF: 2.8, sw: 2.3, knotA: 2,   knotB: 2,   glow: 2,   glowA: 0.9,  glowF: 2.4, skewX:  0, fillOp: 0.08 },
+    { id: 'idle',        category: 'Header',    name: 'Idle',        color:  0, rot:  0,  sc: 1,    tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0,     wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0    },
+    { id: 'sleeping',    category: 'Header',    name: 'Sleeping',    color:  2, rot:  0,  sc: 0.88, tx: 0,  ty:  1.5, ts: 0.25, te: 0.5,  oSpd: 0.008, wA: 0,   wF: 0,    soA: 0.008, soF: 0.6, sw: 1.45, knotA: 1.92, knotB: 2.08, glow: 0.4, glowA: 0.15, glowF: 0.5, skewX:  0, fillOp: 0.02 },
+    { id: 'suggesting',  category: 'Header',    name: 'Suggesting',  color: 11, rot:  0,  sc: 1.12, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.18,  wA: 0,   wF: 0,    soA: 0.055, soF: 4.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 2.4, glowA: 1.6,  glowF: 3.8, skewX:  0, fillOp: 0.07 },
+    { id: 'proactive',   category: 'Header',    name: 'Proactive',   color: 13, rot:  2,  sc: 1.05, tx: 0,  ty: -0.5, ts: 0,    te: 1,    oSpd: 0.22,  wA: 2.2, wF: 4.5,  soA: 0.022, soF: 2.8, sw: 2.35, knotA: 2,   knotB: 2,   glow: 2.2, glowA: 0.85, glowF: 2.6, skewX:  0, fillOp: 0.06 },
+    { id: 'social',      category: 'Header',    name: 'Social',      color:  9, rot:  4,  sc: 1.03, tx: 0,  ty:  0,   ts: 0.02, te: 0.94, oSpd: 0.07,  wA: 0.8, wF: 1.2,  soA: 0.018, soF: 1.4, sw: 2.1, knotA: 2,   knotB: 2,   glow: 1.3, glowA: 0.35, glowF: 1.1, skewX:  2, fillOp: 0.035 },
+    { id: 'learning',    category: 'Header',    name: 'Learning',    color: 10, rot:  5,  sc: 1.02, tx: 0,  ty:  0,   ts: 0.05, te: 0.85, oSpd: 0.04,  wA: 0.6, wF: 0.55, soA: 0,     soF: 0,   sw: 2,   knotA: 1.55, knotB: 2.45, glow: 1.6, glowA: 0.45, glowF: 0.9, skewX:  9, fillOp: 0.045 },
+    { id: 'negotiating', category: 'Header',    name: 'Negotiating', color:  1, rot:  0,  sc: 1.04, tx: 0,  ty:  0,   ts: 0.08, te: 0.78, oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.2, knotA: 2.1, knotB: 1.95, glow: 1.2, glowA: 0,    glowF: 0,   skewX: 14, fillOp: 0.025 },
+    { id: 'celebrating', category: 'Header',    name: 'Celebrating', color: 11, rot:  0,  sc: 1.1,  tx: 0,  ty: -2,   ts: 0,    te: 1,    oSpd: 0.24,  wA: 0,   wF: 0,    soA: 0.045, soF: 3.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.6,  glowF: 2.2, skewX:  0, fillOp: 0.11 },
+    { id: 'confused',    category: 'Header',    name: 'Confused',    color: 14, rot: -2,  sc: 0.95, tx: 0,  ty:  0.5, ts: 0.14, te: 0.68, oSpd: 0.12,  wA: 1.5, wF: 9,    soA: 0,     soF: 0,   sw: 1.95, knotA: 2.15, knotB: 1.85, glow: 0.3, glowA: 0,    glowF: 0,   skewX: -10, fillOp: 0    },
+    { id: 'error',       category: 'Header',    name: 'Error',       color:  7, rot: -5,  sc: 0.86, tx: 0,  ty:  2,   ts: 0.2,  te: 0.52, oSpd: 0.02,  wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 1.55, knotA: 1.85, knotB: 2.15, glow: 0.25, glowA: 0,    glowF: 0,   skewX: -5, fillOp: 0    },
   ];
+
+  const emotionIndexById = Object.fromEntries(emotions.map((e, i) => [e.id, i]));
 
   const KEYS = ['rot','sc','tx','ty','ts','te','oSpd','wA','wF','soA','soF','sw','knotA','knotB','glow','glowA','glowF','skewX','fillOp'];
 
@@ -455,7 +462,7 @@
     h += '</div></div>';
 
     // Shape
-    h += '<div class="p-section"><div class="p-heading"><span>Shape</span><span class="emo-label" id="emo-label">Calm</span></div>';
+    h += '<div class="p-section"><div class="p-heading"><span>Shape</span><span class="emo-label" id="emo-label">Working</span></div>';
     for (const [key, label, min, max, step, prec] of SHAPE_SLIDERS) {
       h += `<div class="s-row"><label>${label}</label>
         <input type="range" id="s-${key}" min="${min}" max="${max}" step="${step}" value="0">
@@ -540,7 +547,7 @@
     // Export
     document.getElementById('btn-export').addEventListener('click', () => {
       const data = emotions.map(e => {
-        const o = { name: e.name, color: e.color };
+        const o = { id: e.id, category: e.category, name: e.name, color: e.color };
         for (const k of KEYS) o[k] = e[k];
         return o;
       });
@@ -568,19 +575,36 @@
     activeIdx = idx;
     KEYS.forEach(k => { tgt[k] = emotions[idx][k]; });
     loadEmotionSliders(idx);
-    document.querySelectorAll('#nav button').forEach((b, i) =>
-      b.classList.toggle('active', i === idx)
+    document.querySelectorAll('#nav button[data-idx]').forEach((b) =>
+      b.classList.toggle('active', parseInt(b.dataset.idx, 10) === idx)
     );
+  }
+
+  function setTrefoilEmotion(id) {
+    const i = emotionIndexById[id];
+    if (i !== undefined) setEmotion(i);
   }
 
   // ─── Build nav ───────────────────────────────────────────────────────────
   const navEl = document.getElementById('nav');
-  emotions.forEach((e, i) => {
-    const btn = document.createElement('button');
-    btn.textContent = e.name;
-    btn.addEventListener('click', () => setEmotion(i));
-    navEl.appendChild(btn);
+  const NAV_GROUPS = ['Streaming', 'Header'];
+  NAV_GROUPS.forEach((cat) => {
+    const h = document.createElement('div');
+    h.className = 'nav-heading';
+    h.textContent = cat;
+    navEl.appendChild(h);
+    emotions.forEach((e, i) => {
+      if (e.category !== cat) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.idx = String(i);
+      btn.textContent = e.name;
+      btn.addEventListener('click', () => setEmotion(i));
+      navEl.appendChild(btn);
+    });
   });
+
+  window.setTrefoilEmotion = setTrefoilEmotion;
 
   buildPanel();
   setEmotion(0);
