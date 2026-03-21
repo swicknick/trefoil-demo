@@ -440,9 +440,6 @@
         <input type="range" id="g-${key}" min="${min}" max="${max}" step="${step}" value="${globals[key]}">
         <span class="s-val" id="gv-${key}">${globals[key].toFixed(prec)}</span></div>`;
     }
-    h += `<div class="s-row" style="margin-top:4px"><label>All Stroke W</label>
-      <input type="range" id="g-allSw" min="0.5" max="12" step="0.1" value="2">
-      <span class="s-val" id="gv-allSw">2.0</span></div>`;
     h += '</div>';
 
     // Color
@@ -519,17 +516,6 @@
         globalValEls[key].textContent = v.toFixed(prec);
       });
     }
-
-    // All Stroke W
-    const allSwEl = document.getElementById('g-allSw');
-    document.getElementById('g-allSw').addEventListener('input', () => {
-      const v = parseFloat(allSwEl.value);
-      document.getElementById('gv-allSw').textContent = v.toFixed(1);
-      for (const e of emotions) e.sw = v;
-      tgt.sw = v;
-      sliderEls.sw.value = v;
-      valEls.sw.textContent = v.toFixed(1);
-    });
 
     // Color swatches
     document.querySelectorAll('.c-swatch').forEach(el => {
