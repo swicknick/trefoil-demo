@@ -235,6 +235,12 @@
     text-overflow: ellipsis;
     width: 100%;
   }
+
+  /* CSS 3D on wrapper <g> — perspective + rotateX/Y applied in JS */
+  #g3d {
+    transform-box: fill-box;
+    transform-origin: 48px 48px;
+  }
 </style>
 </head>
 <body>
@@ -258,6 +264,7 @@
         </feMerge>
       </filter>
     </defs>
+    <g id="g3d">
     <g id="tg">
       <path id="tp"
         fill="url(#grad)"
@@ -266,6 +273,7 @@
         stroke-linecap="round"
         stroke-linejoin="round"
         filter="url(#glow-f)"/>
+    </g>
     </g>
   </svg>
 </main>
@@ -300,6 +308,7 @@
   const gradEl    = document.getElementById('grad');
   const glowBlur  = document.getElementById('glow-blur');
   const pathEl    = document.getElementById('tp');
+  const group3dEl = document.getElementById('g3d');
   const groupEl   = document.getElementById('tg');
 
   let currentColorIdx = 0;
@@ -370,26 +379,27 @@
   // glow / glowA / glowF – blur glow + oscillation
   // skewX – horizontal skew (°)
   // fillOp – interior fill opacity (0–0.3)
+  // rx / ry – CSS 3D tilt (°), applied on #g3d wrapper
   // Streaming: agent response. Header: app header / lifecycle.
   const emotions = [
-    { id: 'working',     category: 'Streaming', name: 'Working',     color:  8, rot:  0,  sc: 1.06, tx: 0,  ty:  0,   ts: 0.02, te: 0.72, oSpd: 0.025, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 1.1, glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.02 },
-    { id: 'listening',   category: 'Streaming', name: 'Listening',   color:  4, rot:  0,  sc: 1.09, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.05,  wA: 0.4, wF: 0.8,  soA: 0.012, soF: 1,   sw: 2.3, knotA: 2,   knotB: 2,   glow: 1.4, glowA: 0.4,  glowF: 0.9, skewX:  0, fillOp: 0.04 },
-    { id: 'happy',       category: 'Streaming', name: 'Happy',       color: 11, rot:  0,  sc: 1.05, tx: 0,  ty: -1.5, ts: 0,    te: 1,    oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0.035, soF: 2.8, sw: 2.3, knotA: 2,   knotB: 2,   glow: 2,   glowA: 0.9,  glowF: 2.4, skewX:  0, fillOp: 0.08 },
-    { id: 'idle',        category: 'Header',    name: 'Idle',        color:  0, rot:  0,  sc: 1,    tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0,     wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0    },
-    { id: 'sleeping',    category: 'Header',    name: 'Sleeping',    color:  2, rot:  0,  sc: 0.88, tx: 0,  ty:  1.5, ts: 0.25, te: 0.5,  oSpd: 0.008, wA: 0,   wF: 0,    soA: 0.008, soF: 0.6, sw: 1.45, knotA: 1.92, knotB: 2.08, glow: 0.4, glowA: 0.15, glowF: 0.5, skewX:  0, fillOp: 0.02 },
-    { id: 'suggesting',  category: 'Header',    name: 'Suggesting',  color: 11, rot:  0,  sc: 1.12, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.18,  wA: 0,   wF: 0,    soA: 0.055, soF: 4.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 2.4, glowA: 1.6,  glowF: 3.8, skewX:  0, fillOp: 0.07 },
-    { id: 'proactive',   category: 'Header',    name: 'Proactive',   color: 13, rot:  2,  sc: 1.05, tx: 0,  ty: -0.5, ts: 0,    te: 1,    oSpd: 0.22,  wA: 2.2, wF: 4.5,  soA: 0.022, soF: 2.8, sw: 2.35, knotA: 2,   knotB: 2,   glow: 2.2, glowA: 0.85, glowF: 2.6, skewX:  0, fillOp: 0.06 },
-    { id: 'social',      category: 'Header',    name: 'Social',      color:  9, rot:  4,  sc: 1.03, tx: 0,  ty:  0,   ts: 0.02, te: 0.94, oSpd: 0.07,  wA: 0.8, wF: 1.2,  soA: 0.018, soF: 1.4, sw: 2.1, knotA: 2,   knotB: 2,   glow: 1.3, glowA: 0.35, glowF: 1.1, skewX:  2, fillOp: 0.035 },
-    { id: 'learning',    category: 'Header',    name: 'Learning',    color: 10, rot:  5,  sc: 1.02, tx: 0,  ty:  0,   ts: 0.05, te: 0.85, oSpd: 0.04,  wA: 0.6, wF: 0.55, soA: 0,     soF: 0,   sw: 2,   knotA: 1.55, knotB: 2.45, glow: 1.6, glowA: 0.45, glowF: 0.9, skewX:  9, fillOp: 0.045 },
-    { id: 'negotiating', category: 'Header',    name: 'Negotiating', color:  1, rot:  0,  sc: 1.04, tx: 0,  ty:  0,   ts: 0.08, te: 0.78, oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.2, knotA: 2.1, knotB: 1.95, glow: 1.2, glowA: 0,    glowF: 0,   skewX: 14, fillOp: 0.025 },
-    { id: 'celebrating', category: 'Header',    name: 'Celebrating', color: 11, rot:  0,  sc: 1.1,  tx: 0,  ty: -2,   ts: 0,    te: 1,    oSpd: 0.24,  wA: 0,   wF: 0,    soA: 0.045, soF: 3.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.6,  glowF: 2.2, skewX:  0, fillOp: 0.11 },
-    { id: 'confused',    category: 'Header',    name: 'Confused',    color: 14, rot: -2,  sc: 0.95, tx: 0,  ty:  0.5, ts: 0.14, te: 0.68, oSpd: 0.12,  wA: 1.5, wF: 9,    soA: 0,     soF: 0,   sw: 1.95, knotA: 2.15, knotB: 1.85, glow: 0.3, glowA: 0,    glowF: 0,   skewX: -10, fillOp: 0    },
-    { id: 'error',       category: 'Header',    name: 'Error',       color:  7, rot: -5,  sc: 0.86, tx: 0,  ty:  2,   ts: 0.2,  te: 0.52, oSpd: 0.02,  wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 1.55, knotA: 1.85, knotB: 2.15, glow: 0.25, glowA: 0,    glowF: 0,   skewX: -5, fillOp: 0    },
+    { id: 'working',     category: 'Streaming', name: 'Working',     color:  8, rot:  0,  sc: 1.06, tx: 0,  ty:  0,   ts: 0.02, te: 0.72, oSpd: 0.025, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 1.1, glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.02, rx:  8, ry: -5 },
+    { id: 'listening',   category: 'Streaming', name: 'Listening',   color:  4, rot:  0,  sc: 1.09, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.05,  wA: 0.4, wF: 0.8,  soA: 0.012, soF: 1,   sw: 2.3, knotA: 2,   knotB: 2,   glow: 1.4, glowA: 0.4,  glowF: 0.9, skewX:  0, fillOp: 0.04, rx: -6, ry:  4 },
+    { id: 'happy',       category: 'Streaming', name: 'Happy',       color: 11, rot:  0,  sc: 1.05, tx: 0,  ty: -1.5, ts: 0,    te: 1,    oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0.035, soF: 2.8, sw: 2.3, knotA: 2,   knotB: 2,   glow: 2,   glowA: 0.9,  glowF: 2.4, skewX:  0, fillOp: 0.08, rx: -4, ry:  0 },
+    { id: 'idle',        category: 'Header',    name: 'Idle',        color:  0, rot:  0,  sc: 1,    tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0,     wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0,    rx:  0, ry:  0 },
+    { id: 'sleeping',    category: 'Header',    name: 'Sleeping',    color:  2, rot:  0,  sc: 0.88, tx: 0,  ty:  1.5, ts: 0.25, te: 0.5,  oSpd: 0.008, wA: 0,   wF: 0,    soA: 0.008, soF: 0.6, sw: 1.45, knotA: 1.92, knotB: 2.08, glow: 0.4, glowA: 0.15, glowF: 0.5, skewX:  0, fillOp: 0.02, rx: 14, ry:  0 },
+    { id: 'suggesting',  category: 'Header',    name: 'Suggesting',  color: 11, rot:  0,  sc: 1.12, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.18,  wA: 0,   wF: 0,    soA: 0.055, soF: 4.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 2.4, glowA: 1.6,  glowF: 3.8, skewX:  0, fillOp: 0.07, rx: -12, ry:  8 },
+    { id: 'proactive',   category: 'Header',    name: 'Proactive',   color: 13, rot:  2,  sc: 1.05, tx: 0,  ty: -0.5, ts: 0,    te: 1,    oSpd: 0.22,  wA: 2.2, wF: 4.5,  soA: 0.022, soF: 2.8, sw: 2.35, knotA: 2,   knotB: 2,   glow: 2.2, glowA: 0.85, glowF: 2.6, skewX:  0, fillOp: 0.06, rx: -8, ry:  5 },
+    { id: 'social',      category: 'Header',    name: 'Social',      color:  9, rot:  4,  sc: 1.03, tx: 0,  ty:  0,   ts: 0.02, te: 0.94, oSpd: 0.07,  wA: 0.8, wF: 1.2,  soA: 0.018, soF: 1.4, sw: 2.1, knotA: 2,   knotB: 2,   glow: 1.3, glowA: 0.35, glowF: 1.1, skewX:  2, fillOp: 0.035, rx: -4, ry:  3 },
+    { id: 'learning',    category: 'Header',    name: 'Learning',    color: 10, rot:  5,  sc: 1.02, tx: 0,  ty:  0,   ts: 0.05, te: 0.85, oSpd: 0.04,  wA: 0.6, wF: 0.55, soA: 0,     soF: 0,   sw: 2,   knotA: 1.55, knotB: 2.45, glow: 1.6, glowA: 0.45, glowF: 0.9, skewX:  9, fillOp: 0.045, rx:  6, ry: -10 },
+    { id: 'negotiating', category: 'Header',    name: 'Negotiating', color:  1, rot:  0,  sc: 1.04, tx: 0,  ty:  0,   ts: 0.08, te: 0.78, oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.2, knotA: 2.1, knotB: 1.95, glow: 1.2, glowA: 0,    glowF: 0,   skewX: 14, fillOp: 0.025, rx:  0, ry: 12 },
+    { id: 'celebrating', category: 'Header',    name: 'Celebrating', color: 11, rot:  0,  sc: 1.1,  tx: 0,  ty: -2,   ts: 0,    te: 1,    oSpd: 0.24,  wA: 0,   wF: 0,    soA: 0.045, soF: 3.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.6,  glowF: 2.2, skewX:  0, fillOp: 0.11, rx: -6, ry: -4 },
+    { id: 'confused',    category: 'Header',    name: 'Confused',    color: 14, rot: -2,  sc: 0.95, tx: 0,  ty:  0.5, ts: 0.14, te: 0.68, oSpd: 0.12,  wA: 1.5, wF: 9,    soA: 0,     soF: 0,   sw: 1.95, knotA: 2.15, knotB: 1.85, glow: 0.3, glowA: 0,    glowF: 0,   skewX: -10, fillOp: 0,    rx: 10, ry: -12 },
+    { id: 'error',       category: 'Header',    name: 'Error',       color:  7, rot: -5,  sc: 0.86, tx: 0,  ty:  2,   ts: 0.2,  te: 0.52, oSpd: 0.02,  wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 1.55, knotA: 1.85, knotB: 2.15, glow: 0.25, glowA: 0,    glowF: 0,   skewX: -5, fillOp: 0,    rx: 18, ry:  0 },
   ];
 
   const emotionIndexById = Object.fromEntries(emotions.map((e, i) => [e.id, i]));
 
-  const KEYS = ['rot','sc','tx','ty','ts','te','oSpd','wA','wF','soA','soF','sw','knotA','knotB','glow','glowA','glowF','skewX','fillOp'];
+  const KEYS = ['rot','sc','tx','ty','ts','te','oSpd','wA','wF','soA','soF','sw','knotA','knotB','glow','glowA','glowF','skewX','fillOp','rx','ry'];
 
   // ─── Slider definitions ──────────────────────────────────────────────────
   const SHAPE_SLIDERS = [
@@ -402,6 +412,8 @@
 
   const ANIM_SLIDERS = [
     ['rot',  'Rotation',    -180, 180,  1,     0],
+    ['rx',   'Rotate X 3D',  -45,  45,  0.5,   1],
+    ['ry',   'Rotate Y 3D',  -45,  45,  0.5,   1],
     ['tx',   'Translate X',  -10,  10,  0.5,   1],
     ['ty',   'Translate Y',  -10,  10,  0.5,   1],
     ['ts',   'Trim Start',    0,   1,   0.01,  2],
@@ -635,6 +647,8 @@
     groupEl.setAttribute('transform',
       `translate(${48 + cur.tx},${48 + cur.ty}) rotate(${r}) skewX(${cur.skewX}) scale(${s}) translate(-48,-48)`
     );
+
+    group3dEl.style.transform = `perspective(420px) rotateX(${cur.rx}deg) rotateY(${cur.ry}deg)`;
 
     const vis = Math.max(0, cur.te - cur.ts) * totalLen;
     const gap = totalLen - vis;
