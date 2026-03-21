@@ -202,6 +202,15 @@
   .c-swatch:hover { transform: scale(1.08); }
   .c-swatch.active { border-color: rgba(255,255,255,0.75); }
 
+  .c-subhead {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 4px;
+  }
+
   .c-name {
     font-size: 8.5px;
     color: rgba(255,255,255,0.28);
@@ -252,19 +261,26 @@
   const SZ = 96, PAD = 10;
 
   // ─── Continua design-system color presets ───────────────────────────────
+  // Indices 0-7: solids   Indices 8-15: gradients
   const COLOR_PRESETS = [
-    { name: 'Chalk',      css: '#ffffff',                                          stops: [['#ffffff','0%'],['rgba(255,255,255,0.6)','50%'],['#ffffff','100%']] },
-    { name: 'Purple',     css: 'linear-gradient(135deg,#C5B4FF,#4049FF)',          stops: [['#C5B4FF','0%'],['#4049FF','100%'],['#4049FF','100%']] },
-    { name: 'Lavender',   css: 'linear-gradient(135deg,#EDE8FF,#C5B4FF)',          stops: [['#EDE8FF','0%'],['#C5B4FF','100%'],['#C5B4FF','100%']] },
-    { name: 'Cyan',       css: 'linear-gradient(135deg,#ADEFC1,#5AEFFD)',          stops: [['#ADEFC1','0%'],['#5AEFFD','100%'],['#5AEFFD','100%']] },
-    { name: 'Sky Blue',   css: 'linear-gradient(135deg,#5AEFFD,#8BDEFF)',          stops: [['#5AEFFD','0%'],['#8BDEFF','100%'],['#8BDEFF','100%']] },
-    { name: 'Mint',       css: 'linear-gradient(135deg,#DAFFF0,#ADEFC1)',          stops: [['#DAFFF0','0%'],['#ADEFC1','100%'],['#ADEFC1','100%']] },
-    { name: 'Energy',     css: 'linear-gradient(135deg,#ADEFC1,#00F07F)',          stops: [['#ADEFC1','0%'],['#00F07F','100%'],['#00F07F','100%']] },
-    { name: 'Yellow',     css: 'linear-gradient(135deg,#F0FFB0,#D5F427)',          stops: [['#F0FFB0','0%'],['#D5F427','100%'],['#D5F427','100%']] },
-    { name: 'Spectrum',   css: 'linear-gradient(135deg,#5AEFFD,#ADEFC1,#00F07F)', stops: [['#5AEFFD','0%'],['#ADEFC1','45%'],['#00F07F','100%']] },
-    { name: 'Sky→Lav',   css: 'linear-gradient(135deg,#8BDEFF,#D0B9FF)',          stops: [['#8BDEFF','0%'],['#D0B9FF','100%'],['#D0B9FF','100%']] },
-    { name: 'Warm',       css: 'linear-gradient(135deg,#F0AF32,#D5F427)',          stops: [['#F0AF32','0%'],['#D5F427','100%'],['#D5F427','100%']] },
-    { name: 'Alert',      css: 'linear-gradient(135deg,#FF8080,#FA4848)',          stops: [['#FF8080','0%'],['#FA4848','100%'],['#FA4848','100%']] },
+    // ── Solids ──────────────────────────────────────────────────────────────
+    { name: 'White',      css: '#ffffff',                                          stops: [['#ffffff','0%'],  ['#ffffff','100%']] },
+    { name: 'Purple',     css: '#4049FF',                                          stops: [['#4049FF','0%'],  ['#4049FF','100%']] },
+    { name: 'Lavender',   css: '#C5B4FF',                                          stops: [['#C5B4FF','0%'],  ['#C5B4FF','100%']] },
+    { name: 'Cyan',       css: '#5AEFFD',                                          stops: [['#5AEFFD','0%'],  ['#5AEFFD','100%']] },
+    { name: 'Mint',       css: '#ADEFC1',                                          stops: [['#ADEFC1','0%'],  ['#ADEFC1','100%']] },
+    { name: 'Energy',     css: '#00F07F',                                          stops: [['#00F07F','0%'],  ['#00F07F','100%']] },
+    { name: 'Yellow',     css: '#D5F427',                                          stops: [['#D5F427','0%'],  ['#D5F427','100%']] },
+    { name: 'Alert',      css: '#FA4848',                                          stops: [['#FA4848','0%'],  ['#FA4848','100%']] },
+    // ── Gradients ────────────────────────────────────────────────────────────
+    { name: 'Pur→Lav',   css: 'linear-gradient(135deg,#C5B4FF,#4049FF)',          stops: [['#C5B4FF','0%'],  ['#4049FF','100%']] },
+    { name: 'Cyan→Mint',  css: 'linear-gradient(135deg,#ADEFC1,#5AEFFD)',          stops: [['#ADEFC1','0%'],  ['#5AEFFD','100%']] },
+    { name: 'Sky→Lav',   css: 'linear-gradient(135deg,#8BDEFF,#D0B9FF)',          stops: [['#8BDEFF','0%'],  ['#D0B9FF','100%']] },
+    { name: 'Spectrum',   css: 'linear-gradient(135deg,#5AEFFD,#ADEFC1,#00F07F)', stops: [['#5AEFFD','0%'],  ['#ADEFC1','45%'],['#00F07F','100%']] },
+    { name: 'Energy Grd', css: 'linear-gradient(135deg,#ADEFC1,#00F07F)',          stops: [['#ADEFC1','0%'],  ['#00F07F','100%']] },
+    { name: 'Warm',       css: 'linear-gradient(135deg,#F0AF32,#D5F427)',          stops: [['#F0AF32','0%'],  ['#D5F427','100%']] },
+    { name: 'Alert Grd',  css: 'linear-gradient(135deg,#FF8080,#FA4848)',          stops: [['#FF8080','0%'],  ['#FA4848','100%']] },
+    { name: 'Mint→Yel',  css: 'linear-gradient(135deg,#ADEFC1,#D5F427)',          stops: [['#ADEFC1','0%'],  ['#D5F427','100%']] },
   ];
 
   const gradEl    = document.getElementById('grad');
@@ -342,28 +358,28 @@
   // fillOp – interior fill opacity (0–0.3)
   const emotions = [
     { name: 'Calm',          color:  0, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0,    wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0    },
-    { name: 'Curious',       color:  3, rot: 14,  sc: 1,    tx: 1,  ty: -1, ts: 0.04, te: 0.80, oSpd: 0.06, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0.5, glowA: 0,    glowF: 0,   skewX:  3, fillOp: 0    },
-    { name: 'Joy',           color:  7, rot:  0,  sc: 1.04, tx: 0,  ty: -2, ts: 0,    te: 1,    oSpd: 0.08, wA: 0,   wF: 0,    soA: 0.03,  soF: 2.5, sw: 2.2, knotA: 2,   knotB: 2,   glow: 1.5, glowA: 0.8,  glowF: 2.5, skewX:  0, fillOp: 0.05 },
-    { name: 'Worry',         color:  0, rot: -4,  sc: 0.92, tx: 0,  ty:  1, ts: 0.12, te: 0.60, oSpd: 0.04, wA: 1.8, wF: 8,    soA: 0,     soF: 0,   sw: 1.8, knotA: 2.1, knotB: 1.9, glow: 0,   glowA: 0,    glowF: 0,   skewX: -2, fillOp: 0    },
-    { name: 'Focus',         color:  1, rot:  0,  sc: 1.06, tx: 0,  ty:  0, ts: 0.02, te: 0.72, oSpd: 0.02, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 1,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.02 },
-    { name: 'Surprise',      color:  8, rot:  0,  sc: 1.10, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.15, wA: 0,   wF: 0,    soA: 0.05,  soF: 4,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 2,   glowA: 1.5,  glowF: 4,   skewX:  0, fillOp: 0.06 },
+    { name: 'Curious',       color:  9, rot: 14,  sc: 1,    tx: 1,  ty: -1, ts: 0.04, te: 0.80, oSpd: 0.06, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0.5, glowA: 0,    glowF: 0,   skewX:  3, fillOp: 0    },
+    { name: 'Joy',           color:  6, rot:  0,  sc: 1.04, tx: 0,  ty: -2, ts: 0,    te: 1,    oSpd: 0.08, wA: 0,   wF: 0,    soA: 0.03,  soF: 2.5, sw: 2.2, knotA: 2,   knotB: 2,   glow: 1.5, glowA: 0.8,  glowF: 2.5, skewX:  0, fillOp: 0.05 },
+    { name: 'Worry',         color:  2, rot: -4,  sc: 0.92, tx: 0,  ty:  1, ts: 0.12, te: 0.60, oSpd: 0.04, wA: 1.8, wF: 8,    soA: 0,     soF: 0,   sw: 1.8, knotA: 2.1, knotB: 1.9, glow: 0,   glowA: 0,    glowF: 0,   skewX: -2, fillOp: 0    },
+    { name: 'Focus',         color:  8, rot:  0,  sc: 1.06, tx: 0,  ty:  0, ts: 0.02, te: 0.72, oSpd: 0.02, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 1,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.02 },
+    { name: 'Surprise',      color: 11, rot:  0,  sc: 1.10, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.15, wA: 0,   wF: 0,    soA: 0.05,  soF: 4,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 2,   glowA: 1.5,  glowF: 4,   skewX:  0, fillOp: 0.06 },
     { name: 'Melancholy',    color:  2, rot: -6,  sc: 0.88, tx: 0,  ty:  3, ts: 0.18, te: 0.55, oSpd: 0.03, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 1.6, knotA: 1.8, knotB: 2.2, glow: 0.5, glowA: 0,    glowF: 0,   skewX: -4, fillOp: 0    },
-    { name: 'Excitement',    color:  7, rot:  0,  sc: 1.02, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.30, wA: 3.5, wF: 5,    soA: 0.02,  soF: 3,   sw: 2.2, knotA: 2,   knotB: 2,   glow: 2.5, glowA: 1,    glowF: 3,   skewX:  0, fillOp: 0.07 },
-    { name: 'Serenity',      color:  5, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 0.92, oSpd: 0.04, wA: 3,   wF: 0.3,  soA: 0.015, soF: 1.2, sw: 2,   knotA: 2,   knotB: 2,   glow: 1,   glowA: 0.3,  glowF: 0.5, skewX:  0, fillOp: 0.03 },
-    { name: 'Tension',       color: 11, rot:  2,  sc: 0.96, tx: 0,  ty:  0, ts: 0.22, te: 0.48, oSpd: 0.25, wA: 1.2, wF: 12,   soA: 0,     soF: 0,   sw: 2,   knotA: 2.3, knotB: 1.7, glow: 0,   glowA: 0,    glowF: 0,   skewX:  4, fillOp: 0    },
-    { name: 'Playful',       color:  9, rot: 10,  sc: 1,    tx: 1,  ty: -1, ts: 0.03, te: 0.85, oSpd: 0.12, wA: 2,   wF: 3,    soA: 0.04,  soF: 2,   sw: 2.1, knotA: 2,   knotB: 2,   glow: 1,   glowA: 0.5,  glowF: 2,   skewX:  5, fillOp: 0.04 },
-    { name: 'Contemplation', color:  1, rot:  8,  sc: 1,    tx: 0,  ty:  0, ts: 0.06, te: 0.82, oSpd: 0.02, wA: 0.5, wF: 0.4,  soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0.8, glowA: 0,    glowF: 0,   skewX:  3, fillOp: 0.02 },
+    { name: 'Excitement',    color: 13, rot:  0,  sc: 1.02, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.30, wA: 3.5, wF: 5,    soA: 0.02,  soF: 3,   sw: 2.2, knotA: 2,   knotB: 2,   glow: 2.5, glowA: 1,    glowF: 3,   skewX:  0, fillOp: 0.07 },
+    { name: 'Serenity',      color:  4, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 0.92, oSpd: 0.04, wA: 3,   wF: 0.3,  soA: 0.015, soF: 1.2, sw: 2,   knotA: 2,   knotB: 2,   glow: 1,   glowA: 0.3,  glowF: 0.5, skewX:  0, fillOp: 0.03 },
+    { name: 'Tension',       color: 14, rot:  2,  sc: 0.96, tx: 0,  ty:  0, ts: 0.22, te: 0.48, oSpd: 0.25, wA: 1.2, wF: 12,   soA: 0,     soF: 0,   sw: 2,   knotA: 2.3, knotB: 1.7, glow: 0,   glowA: 0,    glowF: 0,   skewX:  4, fillOp: 0    },
+    { name: 'Playful',       color: 10, rot: 10,  sc: 1,    tx: 1,  ty: -1, ts: 0.03, te: 0.85, oSpd: 0.12, wA: 2,   wF: 3,    soA: 0.04,  soF: 2,   sw: 2.1, knotA: 2,   knotB: 2,   glow: 1,   glowA: 0.5,  glowF: 2,   skewX:  5, fillOp: 0.04 },
+    { name: 'Contemplation', color:  8, rot:  8,  sc: 1,    tx: 0,  ty:  0, ts: 0.06, te: 0.82, oSpd: 0.02, wA: 0.5, wF: 0.4,  soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0.8, glowA: 0,    glowF: 0,   skewX:  3, fillOp: 0.02 },
     { name: 'Rest',          color:  2, rot:  0,  sc: 0.90, tx: 0,  ty:  1, ts: 0.22, te: 0.52, oSpd: 0.01, wA: 0,   wF: 0,    soA: 0.01,  soF: 0.8, sw: 1.5, knotA: 1.9, knotB: 2.1, glow: 0.5, glowA: 0.2,  glowF: 0.6, skewX:  0, fillOp: 0.03 },
     // ── New ──────────────────────────────────────────────────────────────────
-    { name: 'Euphoria',      color:  8, rot:  0,  sc: 1.08, tx: 0,  ty: -2, ts: 0,    te: 1,    oSpd: 0.22, wA: 0,   wF: 0,    soA: 0.04,  soF: 3,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.5,  glowF: 2,   skewX:  0, fillOp: 0.12 },
-    { name: 'Wonder',        color:  9, rot:  5,  sc: 1.02, tx: 0,  ty:  0, ts: 0,    te: 0.88, oSpd: 0.05, wA: 0.5, wF: 0.6,  soA: 0.02,  soF: 1,   sw: 2,   knotA: 1.5, knotB: 2.5, glow: 2,   glowA: 0.6,  glowF: 0.8, skewX:  5, fillOp: 0.06 },
-    { name: 'Dread',         color: 11, rot: -3,  sc: 0.87, tx: 0,  ty:  2, ts: 0.28, te: 0.55, oSpd: 0.18, wA: 0.8, wF: 14,   soA: 0,     soF: 0,   sw: 1.8, knotA: 2.6, knotB: 1.5, glow: 0,   glowA: 0,    glowF: 0,   skewX: -6, fillOp: 0    },
-    { name: 'Flow',          color:  3, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.09, wA: 2,   wF: 0.5,  soA: 0.02,  soF: 0.8, sw: 2,   knotA: 1.7, knotB: 1.7, glow: 1.5, glowA: 0.5,  glowF: 0.6, skewX:  0, fillOp: 0.05 },
+    { name: 'Euphoria',      color: 11, rot:  0,  sc: 1.08, tx: 0,  ty: -2, ts: 0,    te: 1,    oSpd: 0.22, wA: 0,   wF: 0,    soA: 0.04,  soF: 3,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.5,  glowF: 2,   skewX:  0, fillOp: 0.12 },
+    { name: 'Wonder',        color: 10, rot:  5,  sc: 1.02, tx: 0,  ty:  0, ts: 0,    te: 0.88, oSpd: 0.05, wA: 0.5, wF: 0.6,  soA: 0.02,  soF: 1,   sw: 2,   knotA: 1.5, knotB: 2.5, glow: 2,   glowA: 0.6,  glowF: 0.8, skewX:  5, fillOp: 0.06 },
+    { name: 'Dread',         color: 14, rot: -3,  sc: 0.87, tx: 0,  ty:  2, ts: 0.28, te: 0.55, oSpd: 0.18, wA: 0.8, wF: 14,   soA: 0,     soF: 0,   sw: 1.8, knotA: 2.6, knotB: 1.5, glow: 0,   glowA: 0,    glowF: 0,   skewX: -6, fillOp: 0    },
+    { name: 'Flow',          color:  9, rot:  0,  sc: 1,    tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.09, wA: 2,   wF: 0.5,  soA: 0.02,  soF: 0.8, sw: 2,   knotA: 1.7, knotB: 1.7, glow: 1.5, glowA: 0.5,  glowF: 0.6, skewX:  0, fillOp: 0.05 },
     { name: 'Dreaming',      color:  2, rot:  6,  sc: 0.95, tx: 0,  ty:  0, ts: 0,    te: 0.85, oSpd: 0.03, wA: 0.8, wF: 0.3,  soA: 0.02,  soF: 0.5, sw: 1.8, knotA: 2,   knotB: 2,   glow: 5,   glowA: 1.2,  glowF: 0.4, skewX:  8, fillOp: 0.09 },
-    { name: 'Agitated',      color: 11, rot:  0,  sc: 0.97, tx: 0,  ty:  0, ts: 0.08, te: 0.75, oSpd: 0.24, wA: 4,   wF: 10,   soA: 0.03,  soF: 6,   sw: 2,   knotA: 2.5, knotB: 2.5, glow: 0,   glowA: 0,    glowF: 0,   skewX: -3, fillOp: 0    },
-    { name: 'Tenderness',    color:  6, rot:  0,  sc: 0.98, tx: 0,  ty:  0, ts: 0,    te: 0.95, oSpd: 0.04, wA: 1,   wF: 0.4,  soA: 0.015, soF: 1,   sw: 2,   knotA: 1.8, knotB: 2,   glow: 2,   glowA: 0.5,  glowF: 0.8, skewX:  2, fillOp: 0.07 },
+    { name: 'Agitated',      color: 14, rot:  0,  sc: 0.97, tx: 0,  ty:  0, ts: 0.08, te: 0.75, oSpd: 0.24, wA: 4,   wF: 10,   soA: 0.03,  soF: 6,   sw: 2,   knotA: 2.5, knotB: 2.5, glow: 0,   glowA: 0,    glowF: 0,   skewX: -3, fillOp: 0    },
+    { name: 'Tenderness',    color: 12, rot:  0,  sc: 0.98, tx: 0,  ty:  0, ts: 0,    te: 0.95, oSpd: 0.04, wA: 1,   wF: 0.4,  soA: 0.015, soF: 1,   sw: 2,   knotA: 1.8, knotB: 2,   glow: 2,   glowA: 0.5,  glowF: 0.8, skewX:  2, fillOp: 0.07 },
     { name: 'Confidence',    color:  1, rot:  0,  sc: 1.06, tx: 0,  ty:  0, ts: 0,    te: 1,    oSpd: 0.05, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.8, knotA: 2,   knotB: 2,   glow: 1.5, glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.05 },
-    { name: 'Longing',       color:  9, rot: -8,  sc: 0.94, tx: 0,  ty:  2, ts: 0.08, te: 0.78, oSpd: 0.04, wA: 0.5, wF: 0.5,  soA: 0.01,  soF: 0.7, sw: 1.8, knotA: 2.2, knotB: 1.8, glow: 1.5, glowA: 0.3,  glowF: 0.5, skewX: -6, fillOp: 0.04 },
+    { name: 'Longing',       color: 10, rot: -8,  sc: 0.94, tx: 0,  ty:  2, ts: 0.08, te: 0.78, oSpd: 0.04, wA: 0.5, wF: 0.5,  soA: 0.01,  soF: 0.7, sw: 1.8, knotA: 2.2, knotB: 1.8, glow: 1.5, glowA: 0.3,  glowF: 0.5, skewX: -6, fillOp: 0.04 },
   ];
 
   const KEYS = ['rot','sc','tx','ty','ts','te','oSpd','wA','wF','soA','soF','sw','knotA','knotB','glow','glowA','glowF','skewX','fillOp'];
@@ -388,7 +404,7 @@
     ['wF',   'Wiggle Freq',  0,   15,   0.1,   1],
     ['soA',  'Scale Osc A',  0,   0.1,  0.005, 3],
     ['soF',  'Scale Osc F',  0,   5,    0.1,   1],
-    ['sw',   'Stroke W',     0.5, 5,    0.1,   1],
+    ['sw',   'Stroke W',     0.5, 12,   0.1,   1],
   ];
 
   const FX_SLIDERS = [
@@ -400,7 +416,7 @@
   const ALL_SLIDERS = [...SHAPE_SLIDERS, ...ANIM_SLIDERS, ...FX_SLIDERS];
 
   const GLOBAL_SLIDERS = [
-    ['lerpRate', 'Lerp Speed',     1,  20, 0.5,  1],
+    ['lerpRate', 'Transition Spd', 1,  20, 0.5,  1],
     ['opacity',  'Stroke Opacity', 0,  1,  0.05, 2],
   ];
 
@@ -424,20 +440,16 @@
         <input type="range" id="g-${key}" min="${min}" max="${max}" step="${step}" value="${globals[key]}">
         <span class="s-val" id="gv-${key}">${globals[key].toFixed(prec)}</span></div>`;
     }
-    h += `<div class="s-row"><label>Line Cap</label>
-      <select class="p-select" id="g-linecap">
-        <option value="round" selected>Round</option>
-        <option value="butt">Butt</option>
-        <option value="square">Square</option>
-      </select></div>`;
     h += `<div class="s-row" style="margin-top:4px"><label>All Stroke W</label>
-      <input type="range" id="g-allSw" min="0.5" max="5" step="0.1" value="2">
+      <input type="range" id="g-allSw" min="0.5" max="12" step="0.1" value="2">
       <span class="s-val" id="gv-allSw">2.0</span></div>`;
     h += '</div>';
 
     // Color
-    h += '<div class="p-section"><div class="p-heading">Color</div><div class="color-grid">';
+    h += '<div class="p-section"><div class="p-heading">Color</div>';
+    h += '<div class="c-subhead">Solid</div><div class="color-grid">';
     COLOR_PRESETS.forEach((p, i) => {
+      if (i === 8) h += '</div><div class="c-subhead" style="margin-top:8px">Gradient</div><div class="color-grid">';
       h += `<div class="c-wrap">
         <div class="c-swatch${i===0?' active':''}" data-ci="${i}" style="background:${p.css}" title="${p.name}"></div>
         <div class="c-name">${p.name}</div>
@@ -507,13 +519,6 @@
         globalValEls[key].textContent = v.toFixed(prec);
       });
     }
-
-    // Linecap
-    document.getElementById('g-linecap').addEventListener('change', e => {
-      globals.linecap = e.target.value;
-      pathEl.setAttribute('stroke-linecap', globals.linecap);
-      pathEl.setAttribute('stroke-linejoin', globals.linecap === 'round' ? 'round' : 'miter');
-    });
 
     // All Stroke W
     const allSwEl = document.getElementById('g-allSw');
