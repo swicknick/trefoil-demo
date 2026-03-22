@@ -71,7 +71,7 @@
   svg { display: block; overflow: visible; }
 
   .panel {
-    width: 272px;
+    width: 300px;
     overflow-y: auto;
     flex-shrink: 0;
     border-right: 1px solid rgba(255,255,255,0.06);
@@ -151,13 +151,34 @@
   }
 
   .s-row .s-val {
-    width: 36px;
+    width: 34px;
     flex-shrink: 0;
     font-size: 10px;
     color: rgba(255,255,255,0.35);
     font-variant-numeric: tabular-nums;
     text-align: right;
     user-select: none;
+  }
+
+  .s-reset {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.45);
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .s-reset:hover {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.9);
+    border-color: rgba(255,255,255,0.2);
   }
 
   .p-btn {
@@ -265,6 +286,7 @@
       </filter>
     </defs>
     <g id="g3d">
+    <g id="radiateLayer" style="pointer-events:none"></g>
     <g id="tg">
       <path id="tp"
         fill="url(#grad)"
@@ -310,6 +332,18 @@
   const pathEl    = document.getElementById('tp');
   const group3dEl = document.getElementById('g3d');
   const groupEl   = document.getElementById('tg');
+  const radiateLayerEl = document.getElementById('radiateLayer');
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const radiateG = document.createElementNS(NS, 'g');
+  const radiatePath = document.createElementNS(NS, 'path');
+  radiatePath.setAttribute('fill', 'none');
+  radiatePath.setAttribute('stroke', 'url(#grad)');
+  radiatePath.setAttribute('stroke-linecap', 'round');
+  radiatePath.setAttribute('stroke-linejoin', 'round');
+  radiatePath.setAttribute('fill-opacity', '0');
+  radiateG.appendChild(radiatePath);
+  radiateLayerEl.appendChild(radiateG);
 
   let currentColorIdx = 0;
 
@@ -364,7 +398,8 @@
   totalLen = buildAndSetPath(2, 2);
 
   // ─── Globals ─────────────────────────────────────────────────────────────
-  const globals = { lerpRate: 6, opacity: 1, linecap: 'round' };
+  const GLOBAL_DEFAULTS = { lerpRate: 6, opacity: 1 };
+  const globals = { ...GLOBAL_DEFAULTS, linecap: 'round' };
 
   // ─── Emotion presets ─────────────────────────────────────────────────────
   // rot   – base rotation (°)
@@ -380,26 +415,29 @@
   // skewX – horizontal skew (°)
   // fillOp – interior fill opacity (0–0.3)
   // rx / ry – CSS 3D tilt (°), applied on #g3d wrapper
+  // dswL / dswH – max stroke dip below / rise above sw (osc spans [sw−dswL, sw+dswH]); woF = oscillation speed (Hz)
+  // rotSpd – continuous rotation (°/s), sign = direction; added to rot + wiggle
+  // radiateR / radiateExp / radiateOp – pulses/sec, extra scale at full spread; radiateOp = opacity at start only (always fades to 0 by end)
   // Streaming: agent response. Header: app header / lifecycle.
   const emotions = [
-    { id: 'working',     category: 'Streaming', name: 'Working',     color:  8, rot:  0,  sc: 1.06, tx: 0,  ty:  0,   ts: 0.02, te: 0.72, oSpd: 0.025, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, knotA: 2,   knotB: 2,   glow: 1.1, glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0.02, rx:  8, ry: -5 },
-    { id: 'listening',   category: 'Streaming', name: 'Listening',   color:  4, rot:  0,  sc: 1.09, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.05,  wA: 0.4, wF: 0.8,  soA: 0.012, soF: 1,   sw: 2.3, knotA: 2,   knotB: 2,   glow: 1.4, glowA: 0.4,  glowF: 0.9, skewX:  0, fillOp: 0.04, rx: -6, ry:  4 },
-    { id: 'happy',       category: 'Streaming', name: 'Happy',       color: 11, rot:  0,  sc: 1.05, tx: 0,  ty: -1.5, ts: 0,    te: 1,    oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0.035, soF: 2.8, sw: 2.3, knotA: 2,   knotB: 2,   glow: 2,   glowA: 0.9,  glowF: 2.4, skewX:  0, fillOp: 0.08, rx: -4, ry:  0 },
-    { id: 'idle',        category: 'Header',    name: 'Idle',        color:  0, rot:  0,  sc: 1,    tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0,     wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   knotA: 2,   knotB: 2,   glow: 0,   glowA: 0,    glowF: 0,   skewX:  0, fillOp: 0,    rx:  0, ry:  0 },
-    { id: 'sleeping',    category: 'Header',    name: 'Sleeping',    color:  2, rot:  0,  sc: 0.88, tx: 0,  ty:  1.5, ts: 0.25, te: 0.5,  oSpd: 0.008, wA: 0,   wF: 0,    soA: 0.008, soF: 0.6, sw: 1.45, knotA: 1.92, knotB: 2.08, glow: 0.4, glowA: 0.15, glowF: 0.5, skewX:  0, fillOp: 0.02, rx: 14, ry:  0 },
-    { id: 'suggesting',  category: 'Header',    name: 'Suggesting',  color: 11, rot:  0,  sc: 1.12, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.18,  wA: 0,   wF: 0,    soA: 0.055, soF: 4.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 2.4, glowA: 1.6,  glowF: 3.8, skewX:  0, fillOp: 0.07, rx: -12, ry:  8 },
-    { id: 'proactive',   category: 'Header',    name: 'Proactive',   color: 13, rot:  2,  sc: 1.05, tx: 0,  ty: -0.5, ts: 0,    te: 1,    oSpd: 0.22,  wA: 2.2, wF: 4.5,  soA: 0.022, soF: 2.8, sw: 2.35, knotA: 2,   knotB: 2,   glow: 2.2, glowA: 0.85, glowF: 2.6, skewX:  0, fillOp: 0.06, rx: -8, ry:  5 },
-    { id: 'social',      category: 'Header',    name: 'Social',      color:  9, rot:  4,  sc: 1.03, tx: 0,  ty:  0,   ts: 0.02, te: 0.94, oSpd: 0.07,  wA: 0.8, wF: 1.2,  soA: 0.018, soF: 1.4, sw: 2.1, knotA: 2,   knotB: 2,   glow: 1.3, glowA: 0.35, glowF: 1.1, skewX:  2, fillOp: 0.035, rx: -4, ry:  3 },
-    { id: 'learning',    category: 'Header',    name: 'Learning',    color: 10, rot:  5,  sc: 1.02, tx: 0,  ty:  0,   ts: 0.05, te: 0.85, oSpd: 0.04,  wA: 0.6, wF: 0.55, soA: 0,     soF: 0,   sw: 2,   knotA: 1.55, knotB: 2.45, glow: 1.6, glowA: 0.45, glowF: 0.9, skewX:  9, fillOp: 0.045, rx:  6, ry: -10 },
-    { id: 'negotiating', category: 'Header',    name: 'Negotiating', color:  1, rot:  0,  sc: 1.04, tx: 0,  ty:  0,   ts: 0.08, te: 0.78, oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.2, knotA: 2.1, knotB: 1.95, glow: 1.2, glowA: 0,    glowF: 0,   skewX: 14, fillOp: 0.025, rx:  0, ry: 12 },
-    { id: 'celebrating', category: 'Header',    name: 'Celebrating', color: 11, rot:  0,  sc: 1.1,  tx: 0,  ty: -2,   ts: 0,    te: 1,    oSpd: 0.24,  wA: 0,   wF: 0,    soA: 0.045, soF: 3.2, sw: 2.6, knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.6,  glowF: 2.2, skewX:  0, fillOp: 0.11, rx: -6, ry: -4 },
-    { id: 'confused',    category: 'Header',    name: 'Confused',    color: 14, rot: -2,  sc: 0.95, tx: 0,  ty:  0.5, ts: 0.14, te: 0.68, oSpd: 0.12,  wA: 1.5, wF: 9,    soA: 0,     soF: 0,   sw: 1.95, knotA: 2.15, knotB: 1.85, glow: 0.3, glowA: 0,    glowF: 0,   skewX: -10, fillOp: 0,    rx: 10, ry: -12 },
-    { id: 'error',       category: 'Header',    name: 'Error',       color:  7, rot: -5,  sc: 0.86, tx: 0,  ty:  2,   ts: 0.2,  te: 0.52, oSpd: 0.02,  wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 1.55, knotA: 1.85, knotB: 2.15, glow: 0.25, glowA: 0,    glowF: 0,   skewX: -5, fillOp: 0,    rx: 18, ry:  0 },
+    { id: 'working',     category: 'Streaming', name: 'Working',     color:  8, rot:  0,  rotSpd: 0,  sc: 1.06, tx: 0,  ty:  0,   ts: 0.02, te: 0.72, oSpd: 0.025, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2,   knotB: 2,   glow: 1.1, glowA: 0,    glowF: 0,   radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.02, rx:  8, ry: -5 },
+    { id: 'listening',   category: 'Streaming', name: 'Listening',   color:  4, rot:  0,  rotSpd: 0,  sc: 1.09, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.05,  wA: 0.4, wF: 0.8,  soA: 0.012, soF: 1,   sw: 2.3, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2,   knotB: 2,   glow: 1.4, glowA: 0.4,  glowF: 0.9, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.04, rx: -6, ry:  4 },
+    { id: 'happy',       category: 'Streaming', name: 'Happy',       color: 11, rot:  0,  rotSpd: 0,  sc: 1.05, tx: 0,  ty: -1.5, ts: 0,    te: 1,    oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0.035, soF: 2.8, sw: 2.3, dswL: 0.2, dswH: 0.2, woF: 2,   knotA: 2,   knotB: 2,   glow: 2,   glowA: 0.9,  glowF: 2.4, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.08, rx: -4, ry:  0 },
+    { id: 'idle',        category: 'Header',    name: 'Idle',        color:  0, rot:  0,  rotSpd: 0,  sc: 1,    tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0,     wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2,   dswL: 0,   dswH: 0,   woF: 0,   knotA: 2,   knotB: 2,   glow: 0,   glowA: 0,    glowF: 0,   radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0,    rx:  0, ry:  0 },
+    { id: 'sleeping',    category: 'Header',    name: 'Sleeping',    color:  2, rot:  0,  rotSpd: 0,  sc: 0.88, tx: 0,  ty:  1.5, ts: 0.25, te: 0.5,  oSpd: 0.008, wA: 0,   wF: 0,    soA: 0.008, soF: 0.6, sw: 1.45, dswL: 0,   dswH: 0,   woF: 0,   knotA: 1.92, knotB: 2.08, glow: 0.4, glowA: 0.15, glowF: 0.5, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.02, rx: 14, ry:  0 },
+    { id: 'suggesting',  category: 'Header',    name: 'Suggesting',  color: 11, rot:  0,  rotSpd: 0,  sc: 1.12, tx: 0,  ty:  0,   ts: 0,    te: 1,    oSpd: 0.18,  wA: 0,   wF: 0,    soA: 0.055, soF: 4.2, sw: 2.6, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2,   knotB: 2,   glow: 2.4, glowA: 1.6,  glowF: 3.8, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.07, rx: -12, ry:  8 },
+    { id: 'proactive',   category: 'Header',    name: 'Proactive',   color: 13, rot:  2,  rotSpd: 0,  sc: 1.05, tx: 0,  ty: -0.5, ts: 0,    te: 1,    oSpd: 0.22,  wA: 2.2, wF: 4.5,  soA: 0.022, soF: 2.8, sw: 2.35, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2,   knotB: 2,   glow: 2.2, glowA: 0.85, glowF: 2.6, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.06, rx: -8, ry:  5 },
+    { id: 'social',      category: 'Header',    name: 'Social',      color:  9, rot:  4,  rotSpd: 0,  sc: 1.03, tx: 0,  ty:  0,   ts: 0.02, te: 0.94, oSpd: 0.07,  wA: 0.8, wF: 1.2,  soA: 0.018, soF: 1.4, sw: 2.1, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2,   knotB: 2,   glow: 1.3, glowA: 0.35, glowF: 1.1, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  2, fillOp: 0.035, rx: -4, ry:  3 },
+    { id: 'learning',    category: 'Header',    name: 'Learning',    color: 10, rot:  5,  rotSpd: 0,  sc: 1.02, tx: 0,  ty:  0,   ts: 0.05, te: 0.85, oSpd: 0.04,  wA: 0.6, wF: 0.55, soA: 0,     soF: 0,   sw: 2,   dswL: 0,   dswH: 0,   woF: 0,   knotA: 1.55, knotB: 2.45, glow: 1.6, glowA: 0.45, glowF: 0.9, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  9, fillOp: 0.045, rx:  6, ry: -10 },
+    { id: 'negotiating', category: 'Header',    name: 'Negotiating', color:  1, rot:  0,  rotSpd: 0,  sc: 1.04, tx: 0,  ty:  0,   ts: 0.08, te: 0.78, oSpd: 0.1,   wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.2, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2.1, knotB: 1.95, glow: 1.2, glowA: 0,    glowF: 0,   radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX: 14, fillOp: 0.025, rx:  0, ry: 12 },
+    { id: 'celebrating', category: 'Header',    name: 'Celebrating', color: 11, rot:  0,  rotSpd: 0,  sc: 1.1,  tx: 0,  ty: -2,   ts: 0,    te: 1,    oSpd: 0.24,  wA: 0,   wF: 0,    soA: 0.045, soF: 3.2, sw: 2.6, dswL: 0.35, dswH: 0.35, woF: 3,   knotA: 2,   knotB: 2,   glow: 4,   glowA: 1.6,  glowF: 2.2, radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.11, rx: -6, ry: -4 },
+    { id: 'confused',    category: 'Header',    name: 'Confused',    color: 14, rot: -2,  rotSpd: 0,  sc: 0.95, tx: 0,  ty:  0.5, ts: 0.14, te: 0.68, oSpd: 0.12,  wA: 1.5, wF: 9,    soA: 0,     soF: 0,   sw: 1.95, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2.15, knotB: 1.85, glow: 0.3, glowA: 0,    glowF: 0,   radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX: -10, fillOp: 0,    rx: 10, ry: -12 },
+    { id: 'error',       category: 'Header',    name: 'Error',       color:  7, rot: -5,  rotSpd: 0,  sc: 0.86, tx: 0,  ty:  2,   ts: 0.2,  te: 0.52, oSpd: 0.02,  wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 1.55, dswL: 0,   dswH: 0,   woF: 0,   knotA: 1.85, knotB: 2.15, glow: 0.25, glowA: 0,    glowF: 0,   radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX: -5, fillOp: 0,    rx: 18, ry:  0 },
   ];
 
   const emotionIndexById = Object.fromEntries(emotions.map((e, i) => [e.id, i]));
 
-  const KEYS = ['rot','sc','tx','ty','ts','te','oSpd','wA','wF','soA','soF','sw','knotA','knotB','glow','glowA','glowF','skewX','fillOp','rx','ry'];
+  const KEYS = ['rot','rotSpd','sc','tx','ty','ts','te','oSpd','wA','wF','soA','soF','sw','dswL','dswH','woF','knotA','knotB','glow','glowA','glowF','radiateR','radiateExp','radiateOp','skewX','fillOp','rx','ry'];
 
   // ─── Slider definitions ──────────────────────────────────────────────────
   const SHAPE_SLIDERS = [
@@ -411,7 +449,8 @@
   ];
 
   const ANIM_SLIDERS = [
-    ['rot',  'Rotation',    -180, 180,  1,     0],
+    ['rot',    'Rotation',    -180, 180,  1,     0],
+    ['rotSpd', 'Rot Spd °/s',  -90,  90,  0.5,   1],
     ['rx',   'Rotate X 3D',  -45,  45,  0.5,   1],
     ['ry',   'Rotate Y 3D',  -45,  45,  0.5,   1],
     ['tx',   'Translate X',  -10,  10,  0.5,   1],
@@ -424,12 +463,18 @@
     ['soA',  'Scale Osc A',  0,   0.1,  0.005, 3],
     ['soF',  'Scale Osc F',  0,   5,    0.1,   1],
     ['sw',   'Stroke W',     0.5, 12,   0.1,   1],
+    ['dswL', 'SW Below',     0,   6,    0.05,  2],
+    ['dswH', 'SW Above',     0,   6,    0.05,  2],
+    ['woF',  'SW Osc Spd',   0,   5,    0.1,   1],
   ];
 
   const FX_SLIDERS = [
-    ['glow',  'Base Glow',  0, 8, 0.1, 1],
-    ['glowA', 'Glow Osc A', 0, 4, 0.1, 1],
-    ['glowF', 'Glow Osc F', 0, 5, 0.1, 1],
+    ['glow',     'Base Glow',   0, 8,    0.1,  1],
+    ['glowA',    'Glow Osc A',  0, 4,    0.1,  1],
+    ['glowF',    'Glow Osc F',  0, 5,    0.1,  1],
+    ['radiateR',   'Radiate Rate',  0,    0.225, 0.003, 3],
+    ['radiateExp', 'Radiate Reach', 0,    3.5,   0.02,  2],
+    ['radiateOp',  'Start Opacity', 0,    0.9,   0.01,  2],
   ];
 
   const ALL_SLIDERS = [...SHAPE_SLIDERS, ...ANIM_SLIDERS, ...FX_SLIDERS];
@@ -438,6 +483,10 @@
     ['lerpRate', 'Transition Spd', 1,  20, 0.5,  1],
     ['opacity',  'Stroke Opacity', 0,  1,  0.05, 2],
   ];
+
+  const precByKey = {};
+  for (const [key, , , , , prec] of ALL_SLIDERS) precByKey[key] = prec;
+  for (const [key, , , , , prec] of GLOBAL_SLIDERS) precByKey[key] = prec;
 
   // ─── Animation state ─────────────────────────────────────────────────────
   const cur = {}, tgt = {};
@@ -457,7 +506,8 @@
     for (const [key, label, min, max, step, prec] of GLOBAL_SLIDERS) {
       h += `<div class="s-row"><label>${label}</label>
         <input type="range" id="g-${key}" min="${min}" max="${max}" step="${step}" value="${globals[key]}">
-        <span class="s-val" id="gv-${key}">${globals[key].toFixed(prec)}</span></div>`;
+        <span class="s-val" id="gv-${key}">${globals[key].toFixed(prec)}</span>
+        <button type="button" class="s-reset" data-scope="g" data-key="${key}" title="Reset to default">↺</button></div>`;
     }
     h += '</div>';
 
@@ -478,7 +528,8 @@
     for (const [key, label, min, max, step, prec] of SHAPE_SLIDERS) {
       h += `<div class="s-row"><label>${label}</label>
         <input type="range" id="s-${key}" min="${min}" max="${max}" step="${step}" value="0">
-        <span class="s-val" id="sv-${key}">0</span></div>`;
+        <span class="s-val" id="sv-${key}">0</span>
+        <button type="button" class="s-reset" data-scope="s" data-key="${key}" title="Reset to preset">↺</button></div>`;
     }
     h += '</div>';
 
@@ -487,7 +538,8 @@
     for (const [key, label, min, max, step, prec] of ANIM_SLIDERS) {
       h += `<div class="s-row"><label>${label}</label>
         <input type="range" id="s-${key}" min="${min}" max="${max}" step="${step}" value="0">
-        <span class="s-val" id="sv-${key}">0</span></div>`;
+        <span class="s-val" id="sv-${key}">0</span>
+        <button type="button" class="s-reset" data-scope="s" data-key="${key}" title="Reset to preset">↺</button></div>`;
     }
     h += '</div>';
 
@@ -496,7 +548,8 @@
     for (const [key, label, min, max, step, prec] of FX_SLIDERS) {
       h += `<div class="s-row"><label>${label}</label>
         <input type="range" id="s-${key}" min="${min}" max="${max}" step="${step}" value="0">
-        <span class="s-val" id="sv-${key}">0</span></div>`;
+        <span class="s-val" id="sv-${key}">0</span>
+        <button type="button" class="s-reset" data-scope="s" data-key="${key}" title="Reset to preset">↺</button></div>`;
     }
     h += '</div>';
 
@@ -535,6 +588,25 @@
         globalValEls[key].textContent = v.toFixed(prec);
       });
     }
+
+    panelEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.s-reset');
+      if (!btn || !panelEl.contains(btn)) return;
+      const scope = btn.dataset.scope;
+      const key = btn.dataset.key;
+      if (scope === 'g') {
+        const v = GLOBAL_DEFAULTS[key];
+        globals[key] = v;
+        globalSliderEls[key].value = v;
+        globalValEls[key].textContent = v.toFixed(precByKey[key]);
+      } else {
+        const v = emotions[activeIdx][key];
+        cur[key] = v;
+        tgt[key] = v;
+        sliderEls[key].value = v;
+        valEls[key].textContent = v.toFixed(precByKey[key]);
+      }
+    });
 
     // Color swatches
     document.querySelectorAll('.c-swatch').forEach(el => {
@@ -640,13 +712,23 @@
     const scOsc   = cur.soA * Math.sin(time * cur.soF * Math.PI * 2);
     const glowOsc = cur.glowA * Math.sin(time * cur.glowF * Math.PI * 2);
 
-    const r       = cur.rot + wiggle;
+    const r       = cur.rot + wiggle + time * cur.rotSpd;
     const s       = cur.sc + scOsc;
     const glowVal = Math.max(0, cur.glow + glowOsc);
 
-    groupEl.setAttribute('transform',
-      `translate(${48 + cur.tx},${48 + cur.ty}) rotate(${r}) skewX(${cur.skewX}) scale(${s}) translate(-48,-48)`
-    );
+    let wMin = Math.max(0.5, Math.min(12, cur.sw - cur.dswL));
+    let wMax = Math.max(0.5, Math.min(12, cur.sw + cur.dswH));
+    if (wMax < wMin) [wMin, wMax] = [wMax, wMin];
+    const wSpan = wMax - wMin;
+    const phase = wSpan > 0 && cur.woF > 0
+      ? 0.5 + 0.5 * Math.sin(time * cur.woF * Math.PI * 2)
+      : 0.5;
+    const strokeW = wMin + wSpan * phase;
+
+    const base2D =
+      `translate(${48 + cur.tx},${48 + cur.ty}) rotate(${r}) skewX(${cur.skewX}) scale(${s}) translate(-48,-48)`;
+    groupEl.setAttribute('transform', base2D);
+    radiateLayerEl.setAttribute('transform', base2D);
 
     group3dEl.style.transform = `perspective(420px) rotateX(${cur.rx}deg) rotateY(${cur.ry}deg)`;
 
@@ -654,11 +736,31 @@
     const gap = totalLen - vis;
     pathEl.style.strokeDasharray  = `${vis} ${gap}`;
     pathEl.style.strokeDashoffset = `${-(cur.ts + offset) * totalLen}`;
-    pathEl.style.strokeWidth      = cur.sw;
+    pathEl.style.strokeWidth      = strokeW;
     pathEl.style.opacity          = globals.opacity;
     pathEl.setAttribute('fill-opacity', cur.fillOp.toFixed(3));
 
     glowBlur.setAttribute('stdDeviation', glowVal.toFixed(2));
+
+    const dPath = pathEl.getAttribute('d');
+    const radRate = cur.radiateR;
+    if (radRate < 1e-5) {
+      radiatePath.style.opacity = '0';
+    } else {
+      const period = 1 / radRate;
+      let ph = ((time % period) + period) % period / period;
+      if (ph > 1) ph = 1;
+      if (ph < 0) ph = 0;
+      const echoSc = 1 + ph * cur.radiateExp;
+      const startOp = cur.radiateOp * globals.opacity;
+      const op = (1 - ph) * startOp;
+      radiatePath.setAttribute('d', dPath);
+      radiatePath.style.strokeWidth = String(Math.max(0.35, strokeW * 0.55));
+      radiatePath.style.opacity = String(op);
+      radiatePath.style.strokeDasharray = '';
+      radiatePath.style.strokeDashoffset = '';
+      radiateG.setAttribute('transform', `translate(48,48) scale(${echoSc}) translate(-48,-48)`);
+    }
 
     requestAnimationFrame(tick);
   }
