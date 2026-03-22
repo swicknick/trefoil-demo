@@ -417,7 +417,7 @@
   // rx / ry – CSS 3D tilt (°), applied on #g3d wrapper
   // dswL / dswH – max stroke dip below / rise above sw (osc spans [sw−dswL, sw+dswH]); woF = oscillation speed (Hz)
   // rotSpd – continuous rotation (°/s), sign = direction; added to rot + wiggle
-  // radiateR / radiateExp / radiateOp – pulses/sec, extra scale at full spread; radiateOp = opacity at start only (always fades to 0 by end)
+  // radiateR / radiateExp / radiateOp – radiateR: 0 = off; when on, effective rate is clamped to [0.5, 2] Hz (0.5 = slowest pulse, 2 = faster). radiateExp = extra scale at full spread; radiateOp = opacity at start only (fades to 0 by end)
   // Streaming: agent response. Header: app header / lifecycle.
   const emotions = [
     { id: 'working',     category: 'Streaming', name: 'Working',     color:  8, rot:  0,  rotSpd: 0,  sc: 1.06, tx: 0,  ty:  0,   ts: 0.02, te: 0.72, oSpd: 0.025, wA: 0,   wF: 0,    soA: 0,     soF: 0,   sw: 2.5, dswL: 0,   dswH: 0,   woF: 0,   knotA: 2,   knotB: 2,   glow: 1.1, glowA: 0,    glowF: 0,   radiateR: 0, radiateExp: 1.2, radiateOp: 0.55, skewX:  0, fillOp: 0.02, rx:  8, ry: -5 },
@@ -472,8 +472,8 @@
     ['glow',     'Base Glow',   0, 8,    0.1,  1],
     ['glowA',    'Glow Osc A',  0, 4,    0.1,  1],
     ['glowF',    'Glow Osc F',  0, 5,    0.1,  1],
-    ['radiateR',   'Radiate Rate',  0,    0.225, 0.003, 3],
-    ['radiateExp', 'Radiate Reach', 0,    3.5,   0.02,  2],
+    ['radiateR',   'Radiate Rate',  0,    2,     0.05,  2],
+    ['radiateExp', 'Radiate Distance', 0, 3.5,   0.02,  2],
     ['radiateOp',  'Start Opacity', 0,    0.9,   0.01,  2],
   ];
 
@@ -488,12 +488,74 @@
   for (const [key, , , , , prec] of ALL_SLIDERS) precByKey[key] = prec;
   for (const [key, , , , , prec] of GLOBAL_SLIDERS) precByKey[key] = prec;
 
+  const STORAGE_KEY = 'trefoil-demo:v1';
+  let activeIdx = 0;
+
+  function loadPersistedState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data.v !== 1 || !Array.isArray(data.emotions)) return;
+      const byId = Object.fromEntries(data.emotions.map((e) => [e.id, e]));
+      for (const emo of emotions) {
+        const s = byId[emo.id];
+        if (!s) continue;
+        for (const k of KEYS) {
+          if (typeof s[k] === 'number' && !Number.isNaN(s[k])) emo[k] = s[k];
+        }
+        if (typeof s.color === 'number') emo.color = s.color;
+      }
+      if (data.globals) {
+        if (typeof data.globals.lerpRate === 'number') globals.lerpRate = data.globals.lerpRate;
+        if (typeof data.globals.opacity === 'number') globals.opacity = data.globals.opacity;
+      }
+      if (typeof data.activeIdx === 'number' && data.activeIdx >= 0 && data.activeIdx < emotions.length) {
+        activeIdx = data.activeIdx | 0;
+      }
+    } catch (e) { /* ignore */ }
+  }
+  loadPersistedState();
+
   // ─── Animation state ─────────────────────────────────────────────────────
   const cur = {}, tgt = {};
-  KEYS.forEach(k => { cur[k] = emotions[0][k]; tgt[k] = emotions[0][k]; });
+  KEYS.forEach(k => { cur[k] = emotions[activeIdx][k]; tgt[k] = emotions[activeIdx][k]; });
 
-  let offset = 0, time = 0, lastT = performance.now(), activeIdx = 0;
+  let offset = 0, time = 0, lastT = performance.now();
   const sliderEls = {}, valEls = {}, globalSliderEls = {}, globalValEls = {};
+
+  function syncActiveEmotionFromSliders() {
+    if (!sliderEls.rot) return;
+    for (const [key] of ALL_SLIDERS) {
+      emotions[activeIdx][key] = parseFloat(sliderEls[key].value);
+    }
+    emotions[activeIdx].color = currentColorIdx;
+  }
+
+  function persistState() {
+    syncActiveEmotionFromSliders();
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          v: 1,
+          activeIdx,
+          globals: { lerpRate: globals.lerpRate, opacity: globals.opacity },
+          emotions: emotions.map((e) => {
+            const o = { id: e.id, category: e.category, name: e.name, color: e.color };
+            for (const k of KEYS) o[k] = e[k];
+            return o;
+          }),
+        })
+      );
+    } catch (e) { /* quota / private mode */ }
+  }
+
+  let persistTimer = 0;
+  function schedulePersist() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(persistState, 400);
+  }
 
   // ─── Build panel ─────────────────────────────────────────────────────────
   const panelEl = document.getElementById('panel');
@@ -574,9 +636,14 @@
     // Per-emotion sliders
     for (const [key, , , , , prec] of ALL_SLIDERS) {
       sliderEls[key].addEventListener('input', () => {
-        const v = parseFloat(sliderEls[key].value);
+        let v = parseFloat(sliderEls[key].value);
+        if (key === 'radiateR' && v > 0 && v < 0.5) {
+          v = 0.5;
+          sliderEls[key].value = String(v);
+        }
         tgt[key] = v;
         valEls[key].textContent = v.toFixed(prec);
+        schedulePersist();
       });
     }
 
@@ -586,6 +653,7 @@
         const v = parseFloat(globalSliderEls[key].value);
         globals[key] = v;
         globalValEls[key].textContent = v.toFixed(prec);
+        schedulePersist();
       });
     }
 
@@ -599,12 +667,18 @@
         globals[key] = v;
         globalSliderEls[key].value = v;
         globalValEls[key].textContent = v.toFixed(precByKey[key]);
+        schedulePersist();
       } else {
-        const v = emotions[activeIdx][key];
+        let v = emotions[activeIdx][key];
+        if (key === 'radiateR') {
+          if (v > 0 && v < 0.5) v = 0.5;
+          if (v > 2) v = 2;
+        }
         cur[key] = v;
         tgt[key] = v;
         sliderEls[key].value = v;
         valEls[key].textContent = v.toFixed(precByKey[key]);
+        schedulePersist();
       }
     });
 
@@ -613,20 +687,25 @@
       el.addEventListener('click', () => {
         applyColor(parseInt(el.dataset.ci));
         emotions[activeIdx].color = currentColorIdx;
+        schedulePersist();
       });
     });
 
     // Save
     document.getElementById('btn-save').addEventListener('click', () => {
-      for (const [key] of ALL_SLIDERS) emotions[activeIdx][key] = parseFloat(sliderEls[key].value);
-      emotions[activeIdx].color = currentColorIdx;
+      syncActiveEmotionFromSliders();
+      persistState();
       const btn = document.getElementById('btn-save');
       btn.classList.add('flash');
       setTimeout(() => btn.classList.remove('flash'), 600);
     });
 
     // Reset
-    document.getElementById('btn-reset').addEventListener('click', () => loadEmotionSliders(activeIdx));
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      loadEmotionSliders(activeIdx);
+      KEYS.forEach(k => { cur[k] = emotions[activeIdx][k]; });
+      schedulePersist();
+    });
 
     // Export
     document.getElementById('btn-export').addEventListener('click', () => {
@@ -648,20 +727,33 @@
     const emo = emotions[idx];
     document.getElementById('emo-label').textContent = emo.name;
     for (const [key, , , , , prec] of ALL_SLIDERS) {
-      sliderEls[key].value = emo[key];
-      valEls[key].textContent = emo[key].toFixed(prec);
-      tgt[key] = emo[key];
+      let v = emo[key];
+      if (key === 'radiateR') {
+        if (v > 0 && v < 0.5) v = 0.5;
+        if (v > 2) v = 2;
+      }
+      sliderEls[key].value = v;
+      valEls[key].textContent = v.toFixed(prec);
+      tgt[key] = v;
     }
     applyColor(emo.color);
   }
 
+  function updateNavActive() {
+    document.querySelectorAll('#nav button[data-idx]').forEach((b) =>
+      b.classList.toggle('active', parseInt(b.dataset.idx, 10) === activeIdx)
+    );
+  }
+
   function setEmotion(idx) {
+    if (sliderEls.rot) {
+      syncActiveEmotionFromSliders();
+      persistState();
+    }
     activeIdx = idx;
     KEYS.forEach(k => { tgt[k] = emotions[idx][k]; });
     loadEmotionSliders(idx);
-    document.querySelectorAll('#nav button[data-idx]').forEach((b) =>
-      b.classList.toggle('active', parseInt(b.dataset.idx, 10) === idx)
-    );
+    updateNavActive();
   }
 
   function setTrefoilEmotion(id) {
@@ -691,7 +783,9 @@
   window.setTrefoilEmotion = setTrefoilEmotion;
 
   buildPanel();
-  setEmotion(0);
+  loadEmotionSliders(activeIdx);
+  KEYS.forEach(k => { cur[k] = emotions[activeIdx][k]; });
+  updateNavActive();
 
   // ─── Render loop ─────────────────────────────────────────────────────────
   function tick(now) {
@@ -744,10 +838,11 @@
 
     const dPath = pathEl.getAttribute('d');
     const radRate = cur.radiateR;
-    if (radRate < 1e-5) {
+    const effRate = radRate < 1e-5 ? 0 : Math.max(0.5, Math.min(2, radRate));
+    if (effRate < 1e-5) {
       radiatePath.style.opacity = '0';
     } else {
-      const period = 1 / radRate;
+      const period = 1 / effRate;
       let ph = ((time % period) + period) % period / period;
       if (ph > 1) ph = 1;
       if (ph < 0) ph = 0;
